@@ -7,24 +7,64 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
 	rp := validateArguments()
+	msgs := getAllMesasges(rp)
+	printMetrics(msgs, rp)
+}
 
+func printMetrics(msgs []message, rp runParams) {
+	firstPersonKeywordCount := 0
+	secondPersonKeywordCount := 0
+	totalCharacters := 0
+	searchedCharacters := 0
+	for i1 := 0; i1 < len(msgs); i1++ {
+		msg := msgs[i1]
+		totalCharacters += len(msg.Message)
+		for i2 := 0; i2 < len(rp.keywords); i2++ {
+
+			kw := rp.keywords[i2]
+			count := strings.Count(msg.Message, kw)
+			searchedCharacters += count * len(kw)
+
+			if strings.Contains(msg.From.Name, rp.firstPerson) {
+				firstPersonKeywordCount += count
+			} else {
+				secondPersonKeywordCount += count
+			}
+		}
+	}
+
+	fmt.Println(fmt.Sprintf("Total messages: %d", len(msgs)))
+	fmt.Println()
+	fmt.Println(fmt.Sprintf("%s: %d", rp.firstPerson, firstPersonKeywordCount))
+	fmt.Println(fmt.Sprintf("%s: %d", rp.secondPerson, secondPersonKeywordCount))
+	fmt.Println(fmt.Sprintf("Total laughter: %d", firstPersonKeywordCount+secondPersonKeywordCount))
+	fmt.Println()
+	fmt.Println(fmt.Sprintf("Total characters: %d", totalCharacters))
+	fmt.Println(fmt.Sprintf("Percentage laughter: %f", float64(searchedCharacters)/float64(totalCharacters)))
+}
+
+func getAllMesasges(rp runParams) []message {
+	fmt.Println()
+	fmt.Println("I solemnly swear that I am up to no good...")
 	var msgs []message
 	decodedResponse := readFirstPage(rp)
 
 	for {
 		msgs = append(msgs, decodedResponse.Data...)
 
-		fmt.Println(len(msgs))
 		if len(decodedResponse.Paging.Next) <= 0 {
-			fmt.Println("Done")
+			fmt.Println("...mischief managed.")
+			fmt.Println()
 			break
 		}
 		decodedResponse = readRemainingPages(decodedResponse.Paging.Next)
 	}
+	return msgs
 }
 
 func readRemainingPages(fullURL string) messagesResponse {
@@ -84,21 +124,25 @@ func processResponse(resp *http.Response) []byte {
 func validateArguments() runParams {
 	argumentCount := len(os.Args)
 
-	if argumentCount < 4 {
-		log.Fatal("Please add access token, thread id, and which words to look for.")
+	if argumentCount < 6 {
+		log.Fatal("Please add access token, thread id, the two people's names, and which words to look for.")
 	}
 
 	accessToken := os.Args[1]
 	threadID := os.Args[2]
-	keywords := os.Args[3:]
+	firstPerson := os.Args[3]
+	secondPerson := os.Args[4]
+	keywords := os.Args[5:]
 
-	return runParams{accessToken: accessToken, threadID: threadID, keywords: keywords}
+	return runParams{accessToken: accessToken, threadID: threadID, keywords: keywords, firstPerson: firstPerson, secondPerson: secondPerson}
 }
 
 type runParams struct {
-	accessToken string
-	threadID    string
-	keywords    []string
+	accessToken  string
+	threadID     string
+	keywords     []string
+	firstPerson  string
+	secondPerson string
 }
 
 type messagesResponse struct {
