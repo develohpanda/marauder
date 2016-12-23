@@ -17,35 +17,45 @@ func main() {
 }
 
 func printMetrics(msgs []message, rp runParams) {
-	firstPersonKeywordCount := 0
-	secondPersonKeywordCount := 0
-	totalCharacters := 0
-	searchedCharacters := 0
+	var firstPersonKeywordCount int64
+	var secondPersonKeywordCount int64
+	var totalCharacters int64
+	var searchedCharacters int64
+
+	firstPersonKeywordCount = 0
+	secondPersonKeywordCount = 0
+	totalCharacters = 0
+	searchedCharacters = 0
+
 	for i1 := 0; i1 < len(msgs); i1++ {
 		msg := msgs[i1]
-		totalCharacters += len(msg.Message)
+		totalCharacters += int64(len(msg.Message))
 		for i2 := 0; i2 < len(rp.keywords); i2++ {
 
 			kw := rp.keywords[i2]
 			count := strings.Count(msg.Message, kw)
-			searchedCharacters += count * len(kw)
+			searchedCharacters += int64(count * len(kw))
 
 			if strings.Contains(msg.From.Name, rp.firstPerson) {
-				firstPersonKeywordCount += count
+				firstPersonKeywordCount += int64(count)
 			} else {
-				secondPersonKeywordCount += count
+				secondPersonKeywordCount += int64(count)
 			}
 		}
 	}
 
 	fmt.Println(fmt.Sprintf("Total messages: %d", len(msgs)))
 	fmt.Println()
+	fmt.Println("Keyword counts:")
 	fmt.Println(fmt.Sprintf("%s: %d", rp.firstPerson, firstPersonKeywordCount))
 	fmt.Println(fmt.Sprintf("%s: %d", rp.secondPerson, secondPersonKeywordCount))
-	fmt.Println(fmt.Sprintf("Total laughter: %d", firstPersonKeywordCount+secondPersonKeywordCount))
+	fmt.Println(fmt.Sprintf("Total: %d", firstPersonKeywordCount+secondPersonKeywordCount))
 	fmt.Println()
 	fmt.Println(fmt.Sprintf("Total characters: %d", totalCharacters))
-	fmt.Println(fmt.Sprintf("Percentage laughter: %f", float64(searchedCharacters)/float64(totalCharacters)))
+	fmt.Println(fmt.Sprintf("Characters of joy: %d", searchedCharacters))
+	fmt.Println(fmt.Sprintf("Percentage joy: %f", float64(searchedCharacters)/float64(totalCharacters)))
+	fmt.Println()
+	fmt.Println("Not funny at all... :(")
 }
 
 func getAllMesasges(rp runParams) []message {
